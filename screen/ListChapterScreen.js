@@ -1,50 +1,93 @@
 import React, { Component } from 'react'
-import { Text, View,FlatList,TouchableOpacity } from 'react-native'
+import { Text, View,FlatList,TouchableOpacity, Dimensions, ImageBackground, Alert } from 'react-native'
 import axios from 'axios';
+import {connect} from 'react-redux';
+import * as actioncreators from '../redux/actioncreators';
 
-export default class ListChapterScreen extends Component {
+class ListChapterScreen extends Component {
     static navigationOptions =({navigation})=>({
         title: 'Danh sách Chapter'
     });
     constructor(props){
         super(props);
-        this.state = {Chapters:[],url:''}
+        this.state = {Chapter:0,link:''}
     }
     componentWillMount(){
-        this.setChapters();
-      }
-    setChapters = async()=>{
-        try{
-            const uri = "https://dinh-test-v1.herokuapp.com/comic/" + this.props.navigation.getParam('idComic'); 
-            const respone = await axios.get(uri);
-            const getChapters = respone.data.newDatas.Chapters;
-            this.setState({Chapters:getChapters,url:uri})
-        }
-        catch(error){
-            alert(error.message)
+        const {comicRead} = this.props
+        if(comicRead!=[]){
+        for(var i=0;i<comicRead.length;i++){
+        if(comicRead[i].Id==this.props.navigation.getParam('idComic'))
+        this.askingForRead(comicRead[i].Chapter,comicRead[i].Link)}}
+    }
+    askingForRead(chapter,link){
+        const {navigate} = this.props.navigation;
+        if(chapter!=1){
+            Alert.alert(
+                'Gợi ý',
+                'Bạn đang đọc ở chapter '+ chapter,
+                [
+                  {
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  {text: 'OK', onPress: () => navigate('Read', {Chapter : chapter, link: link})},
+                ],
+                {cancelable: false},
+              );
         }
     }
     render() {
         const {navigate} = this.props.navigation;
+        const {comicDetail} = this.props
         return (
-            <View style={{flex : 1 , justifyContent : 'flex-start' , backgroundColor : 'white'}}>
+            <View style={styles.container}>
+                <ImageBackground 
+                    source={require('./../pic/background-home.jpg')} 
+                    style={{width: '100%', height: '100%'}}>
                 <FlatList
-                data={this.state.Chapters}
+                data={comicDetail.Chapters}
                 keyExtractor={item=>item.Chapter}
                 renderItem={param=>(
-                    <View style={{height:50,borderBottomColor: '#a9a9a9', borderBottomWidth: 0.5}}>
-                    <TouchableOpacity style={{flexDirection:'row', margin:5}}
-                onPress={() => navigate('Read', {Chapter : param.item.Chapter,uri: this.state.url, link: param.item.Link})}
+                    <View style={styles.chapterContainer}>
+                    <TouchableOpacity style={styles.buttonContainer}
+                onPress={() => navigate('Read', {Chapter : param.item.Chapter, link: param.item.Link})}
                 >
                 <View>
-                <Text style={{fontSize:20, marginTop:10}}>Chap {param.item.Chapter}</Text>
+                <Text style={styles.text}>Chap {param.item.Chapter}</Text>
                 </View>
                 </TouchableOpacity>
                     </View>
                 )}>
                 </FlatList>
+                </ImageBackground>
             </View>
             
         )
       }
 }
+screenHeight = Dimensions.get('window').height;
+const styles = {
+    container:{
+        flex : 1 ,
+        justifyContent : 'flex-start',
+        backgroundColor : 'white'
+    },
+    chapterContainer:{
+        height:screenHeight*0.1,
+        borderBottomColor: 'white',
+        borderBottomWidth: 1
+    },
+    buttonContainer:{
+        flexDirection:'row',
+        margin:screenHeight*0.01
+    },
+    text:{
+        fontSize:screenHeight*0.03,
+        margin:screenHeight*0.02,
+        color:'white'
+    }
+}
+const mapStateToprops = state => ({comicRead: state.comicRead, 
+    comicDetail : state.comicDetail})
+export default connect(mapStateToprops,actioncreators)(ListChapterScreen);

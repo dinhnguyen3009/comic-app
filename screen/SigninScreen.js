@@ -1,81 +1,141 @@
 import React, { Component } from 'react'
-import { Text, View, TextInput, TouchableOpacity, Dimensions} from 'react-native'
+import { Text, View, TextInput, TouchableOpacity, Dimensions, ImageBackground, Alert} from 'react-native'
 import Userservice from '../user/user.service'
 import { StackActions, NavigationActions } from 'react-navigation';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {connect} from 'react-redux';
+import * as actioncreators from '../redux/actioncreators';
 
-export default class Singin extends Component {
+class Signin extends Component {
   constructor(props){
     super(props);
     this.state={txtPassword:'',txtUsername:''};
+    this.logIn = this.logIn.bind(this)
   }
-  signin = async () => {
-    try {
-        const {txtUsername , txtPassword} = this.state;
-        const response = await Userservice.signIn(txtUsername,txtPassword);
-        if(response.data.success===true){
-          alert('Dang nhap thanh cong')
-          const resetAction = StackActions.reset({
-            index: 0,
-            actions: [NavigationActions.navigate({ routeName: 'Profile' })],
-          });
-        this.props.navigation.dispatch(resetAction);
-        }
-        else{
-          alert(response.data.message);
-        }
-
-    } catch (error) {
-      alert(error.message)
-    }
+  static navigationOptions =({navigation})=>({
+    title: 'Đăng nhập',
+    headerStyle: { backgroundColor: 'black', height:screenHeight*0.07},
+    headerTitleStyle: { color: 'white' },
+    headerTintColor:'white'
+  });
+  logIn = async ()=>{
+    const { txtPassword , txtUsername } = this.state;
+    await this.props.signIn(txtUsername,txtPassword)
+    this.setState({txtPassword:'',txtUsername:''})
   }
-  render() {
-    const screenWidth = Dimensions.get('window').width;
-    const screenHeight = Dimensions.get('window').height;
-    const {navigate} = this.props.navigation;
+  componentDidUpdate(){
+    if(this.props.users.Id)
+    this.props.navigation.navigate('Home');
+  }
+  renderLogin(){
+    const {navigate} = this.props.navigation
     return (
-      <View style={{flex : 1  , backgroundColor:'#4267b2'}}>
       <KeyboardAwareScrollView enableOnAndroid extraScrollHeight={200} >
-      <View style={{alignItems : 'center' , justifyContent : 'center',marginTop:screenHeight*0.2}}>
-      <View style={{width : screenWidth*0.9, margin : 10}}>
-                <Text style={{fontSize:17, fontWeight:'bold'}}>Tên tài khoản</Text>
+      <View style={styles.container}>
+        <View style={styles.inputContainer}>
+                <Text style={styles.text}>Tên tài khoản</Text>
                 <TextInput
                     underlineColorAndroid="transparent"
                     value={this.state.txtUsername}
                     onChangeText={text => this.setState({txtUsername : text})}
-                    style={{backgroundColor : 'white' , height : 50 , padding : 10 , borderRadius : 5, marginBottom:5, marginTop:5}}
+                    style={styles.input}
                     placeholder="Nhập tài khoản"
                 />
-                <Text style={{fontSize:17, fontWeight:'bold'}}>Mật khẩu</Text>
+                <Text style={styles.text}>Mật khẩu</Text>
                 <TextInput
                     secureTextEntry
                     underlineColorAndroid="transparent"
                     value={this.state.txtPassword}
                     onChangeText={text => this.setState({txtPassword : text})}
-                    style={{backgroundColor : 'white' , height : 50 , padding : 10 , borderRadius : 5, marginBottom:5, marginTop:5}}
+                    style={styles.input}
                     placeholder="Nhập mật khẩu"
                 />
-            </View>
-            <View style={{ width : screenWidth*0.9, margin:10}}>
+        </View>
+        <View style={styles.buttonContainer}>
                 <TouchableOpacity 
-                    onPress={this.signin}
+                    onPress={this.logIn}
                     disabled = {this.state.txtUsername&&this.state.txtPassword?false:true}
-                    style={{backgroundColor : this.state.txtUsername&&this.state.txtPassword?'#3393FD':'#B1E6F0' ,alignItems:'center', padding : 5 , borderRadius : 5, height:35, marginBottom:5}}>
-                    <Text style={{ fontSize : 20 , color : 'white', fontWeight:'bold'}}>Đăng nhập</Text>
+                    style={this.state.txtUsername&&this.state.txtPassword?styles.buttonEnable:styles.buttonDisable}>
+                    <Text style={styles.text}>Đăng nhập</Text>
                 </TouchableOpacity>
-                <View style={{alignItems : 'center' , justifyContent : 'center'}}>
-                <Text>Nếu chưa có tài khoản</Text>
+                <View style={styles.textContainer}>
+                <Text style = {styles.textNormal}>Nếu chưa có tài khoản</Text>
                 </View>
                 
                 <TouchableOpacity 
                     onPress={()=>{navigate('Signup')}}
-                    style={{backgroundColor : '#3393FD' ,alignItems:'center', padding : 5 , borderRadius : 5,height:35, marginTop:5}}>
-                    <Text style={{ fontSize : 20 , color : 'white', fontWeight:'bold'}}>Đăng ký</Text>
+                    style={styles.buttonEnable}>
+                    <Text style={styles.text}>Đăng ký</Text>
                 </TouchableOpacity>
-            </View>
+        </View>
       </View>
       </KeyboardAwareScrollView>
-      </View>
     )
   }
+  render() {
+    return (
+      <View style={{flex : 1 }}>
+        <ImageBackground 
+        source={require('./../pic/background-home.jpg')} 
+        style={{width: '100%', height: '100%'}}>
+          {this.renderLogin()}
+      </ImageBackground>
+      </View>
+    )
+    }
+  }
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+const styles ={
+  container:{
+    alignItems : 'center',
+    justifyContent : 'center',
+    marginTop:screenHeight*0.2
+  },
+  inputContainer:{
+    width : screenWidth*0.9,
+    margin : screenWidth*0.015
+  },
+  input:{
+    backgroundColor : 'white' ,
+    height : screenHeight*0.08 ,
+    padding : screenHeight*0.005 ,
+    borderRadius : 5,
+    marginBottom:screenHeight*0.0025,
+    marginTop:screenHeight*0.0025
+  },
+  buttonContainer:{
+    width : screenWidth*0.9,
+    margin:screenHeight*0.005
+  },
+  buttonEnable:{
+    backgroundColor : '#3393FD',
+    alignItems:'center',
+    padding : screenHeight*0.005,
+    borderRadius : 5,
+    height:screenHeight*0.06,
+  },
+  buttonDisable:{
+    backgroundColor : '#B1E6F0',
+    alignItems:'center',
+    padding : screenHeight*0.005,
+    borderRadius : 5,
+    height:screenHeight*0.06,
+  },
+  text:{
+    fontSize : screenHeight*0.03,
+    color : 'white',
+    fontWeight:'bold'
+  },
+  textNormal:{
+    fontSize : screenHeight*0.02,
+    color : 'white',
+    margin: screenHeight*0.01
+  },
+  textContainer:{
+    alignItems : 'center',
+    justifyContent : 'center'
+  }
 }
+const mapStateToprops = state => ({users : state.users})
+export default connect(mapStateToprops,actioncreators)(Signin);

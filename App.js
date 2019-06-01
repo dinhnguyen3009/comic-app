@@ -1,4 +1,5 @@
-import React from "react";
+import React, { Component } from 'react'
+import {Provider} from 'react-redux';
 import { Dimensions, Button } from "react-native";
 import {createStackNavigator, createDrawerNavigator, createAppContainer, createMaterialTopTabNavigator } from "react-navigation";
 import HomeScreen from './screen/HomeScreen'
@@ -10,35 +11,37 @@ import Signin from './screen/SigninScreen'
 import Profile from './screen/ProfileScreen'
 import Signup from './screen/SignupScreen'
 import ResultScreen from './screen/ResultScreen'
+import {store} from './redux/store';
 
 const ListComic = createMaterialTopTabNavigator({
   Detail: {screen: DetailScreen},
-  ListChapterScreen: {screen:ListChapterScreen}
-});
-// const User = createStackNavigator({
-//   Profile: {screen: Profile},
-//   Signin: {screen: Signin},
-//   Signup: {screen: Signup},
-// });
+  ListChapterScreen: {screen:ListChapterScreen},
+},{tabBarOptions:{
+  pressColor: 'yellow',
+  style: {
+    backgroundColor: 'black',
+  }}}
+);
 const Home = createStackNavigator({
   Home:{screen: HomeScreen},
   Read:{screen:ReadScreen},
-  Profile:{screen:Profile,
-    navigationOptions: ({ navigation }) => ({
-      title: 'UserProfile',
-      headerLeft: <Button title="Menu" onPress={()=>{navigation.openDrawer()}}/>
-    }),
-  },
+  Profile:{screen:Profile},
   Signin: {screen: Signin},
   Signup: {screen: Signup},
   Result:{screen:ResultScreen,
     navigationOptions: ({ navigation }) => ({
       title: `${navigation.state.params.title}`,
+      headerStyle: { backgroundColor: 'black'},
+      headerTintColor:'white',
+      headerTitleStyle: { color: 'white' },
     }),
   },
   ListComic:{screen: ListComic,
     navigationOptions: ({ navigation }) => ({
       title: `${navigation.state.params.name}`,
+      headerTintColor: 'white',
+      headerStyle: { backgroundColor: 'black'},
+      headerTitleStyle: { color: 'white' },
     }),
   }
   //ta có thể thấy ở đây ta đã khai báo 1 màn hình hoàn chỉnh với navigation option, và nội dung được render ra là 1 màn hình.
@@ -58,7 +61,18 @@ const AppNavigator = createDrawerNavigator({
     }
   },
   drawerWidth: screenWidth*0.4,
+  drawerBackgroundColor: 'black',
   contentComponent : props => <SlideMenu {...props}/>
 });
 
-export default createAppContainer(AppNavigator);
+let Navigation = createAppContainer(AppNavigator);
+class App extends Component {
+  render() {
+    return (
+      <Provider store={store}>
+        <Navigation />
+      </Provider>
+    );
+  }
+}
+export default App;

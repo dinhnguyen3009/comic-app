@@ -8,11 +8,17 @@ export default class Userservice{
        const response = await axios.post(URL, {username,password});
        if(response.data.user){
            const {user} = response.data;
-           await AsyncStorage.setItem("userInfo",JSON.stringify({Id:user._id,Username:user.Username,Comments:user.Comments.length}))
+           const userData = JSON.stringify({Id:user._id,Username:user.Username,Comments:user.Comments.length,Likedcomics:user.Likedcomics,Readcomics:user.Readcomics,Rating:user.Rating})
+           await AsyncStorage.setItem("userInfo",userData)
+           alert('Đăng nhập thành công');
        }
-       return response
+       else
+        alert(response.data.message)
+        const userInfo = await AsyncStorage.getItem("userInfo")
+        return userInfo;
     }    
     static async logout(){
         await AsyncStorage.removeItem("userInfo");
+        return [];
     }
 } 
